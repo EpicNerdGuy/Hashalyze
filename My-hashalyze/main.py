@@ -4,6 +4,7 @@ import binascii
 hash_filter = {
     32: ["MD5", "NTLM"],
     40: ["SHA1"],
+    60: ['Bcrypt'],
     64: ["SHA256"],
     96: ["SHA384"],
     128: ["SHA512"],
@@ -51,7 +52,14 @@ def check_hash(length, hashx, return_types=False):
     else:
         print("NOT A COMMON HASH")
 
-
+def check_bcrypt(hashx):
+    if len(hashx)==60:
+        print("\nCHECKING...\n")
+        if hashx.startswith(("$2a$","$2b$","$2y$")):
+            cost=hashx[4:6]
+            if cost.isdigit():
+                return True
+    return False
 # Main Logic
 def main():
     print("ENTER YOUR HASH:")
@@ -63,6 +71,8 @@ def main():
             check_hash(length, hashx)
     elif is_base64(hashx):
         print(f"{hashx} is base64")
+    elif check_bcrypt(hashx):
+        print(f"{hashx} is Becrypt")
     else:
         print(hex_result["reason"])
 

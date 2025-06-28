@@ -13,12 +13,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'hash-id=cli:run_cli',
+            'hashalyze=cli:run_cli',
         ],
     },
 )
-entry_points={
-    'console_scripts': [
-        'hash-id=cli:run_cli',
-    ],
-}

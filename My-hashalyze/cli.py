@@ -1,4 +1,4 @@
-from main import check_hash, is_hex, is_base64
+from main import check_hash, is_hex, is_base64,check_bcrypt
 import json
 from pyfiglet import figlet_format
 from colorama import Fore, Style, init
@@ -25,33 +25,45 @@ def print_colored_text(result):
 def run_cli():
     parser = argparse.ArgumentParser(
         description="🔍 Hashalyze - Identify Hash Types Like a Pro 🧠",
-        epilog="Example: hash-id --hash 5f4dcc3b5aa765d61d8327deb882cf99 --format json"
+        epilog="Example: hash-id --hash '$2b$12$abcdefghijklmnopqrstuvABCDEFGHIJKLMNO123456' --format json"
     )
-    parser.add_argument('--hash', required=True, help="Hash string to identify")
+    parser.add_argument('--hash', required=True, help="Hash string to identify (wrap bcrypt in quotes!)")
     parser.add_argument('--format', choices=["json", "text"], default="text", help="Output format")
     parser.add_argument('--version', action='version', version='Hashalyze v1.0.0')
     args = parser.parse_args()
 
-    hashx = args.hash.strip().lower()
-    length = len(hashx)
+    # ⚠️ Do NOT lowercase bcrypt hashes — they're case-sensitive
+    raw_input = args.hash.strip()
+    length = len(raw_input)
+
+    # ✅ Optional debug
+    print(Fore.BLUE + f"[DEBUG] Raw input: '{raw_input}' (Length: {length})")
 
     result = {
-        "input": args.hash,
+        "input": raw_input,
         "length": length,
         "format": None,
         "possible_types": [],
         "valid": False
     }
 
-    hex_result = is_hex(hashx)
+    # ✅ Check bcrypt first
+    if check_bcrypt(raw_input):
+        result["format"] = "bcrypt"
+        result["valid"] = True
+        result["possible_types"] = ["bcrypt"]
 
-    if hex_result["is_hex"]:
+    # ✅ Check hex
+    elif is_hex(raw_input)["is_hex"]:
         result["format"] = "hex"
         result["valid"] = True
-        result["possible_types"] = check_hash(length, hashx, return_types=True)
-    elif is_base64(hashx):
+        result["possible_types"] = check_hash(length, raw_input, return_types=True)
+
+    # ✅ Check base64
+    elif is_base64(raw_input):
         result["format"] = "base64"
         result["valid"] = True
+
     else:
         result["format"] = "unknown"
 
@@ -61,6 +73,7 @@ def run_cli():
         print(json.dumps(result, indent=4))
     else:
         print_colored_text(result)
+
 
 if __name__ == "__main__":
     run_cli()
